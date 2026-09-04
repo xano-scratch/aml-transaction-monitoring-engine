@@ -1,142 +1,125 @@
-# aml-transaction-monitoring-engine
+# AML Transaction-Monitoring Rules Engine
 
-A [XanoTS](https://www.npmjs.com/package/@xanots/sdk) project: a Xano
-backend authored in TypeScript under [`xano/`](xano/), and a React + Vite
-frontend under [`frontend/`](frontend/) that derives its request paths and
-types from the backend defs — so the two can't drift.
+One governed, versioned scoring API that every payment rail and case tool calls, so the same
+rules screen every transaction the same way, and every alert names the exact rule and version
+that fired.
+
+Built with [XanoTS](https://www.npmjs.com/package/@xanots/sdk): a typed Xano backend authored in
+TypeScript, plus a React and Vite frontend that talks to it through one shared contract.
+
+![The alert evidence screen: a scored transaction with the exact rules that fired, the score, and the rule-set version.](docs/screenshot.png)
+
+**6 tables · 12 APIs · 1 shared function**
+
+## What it demonstrates
+
+This is a **business logic centralization** template for **banking and financial services**. A
+bank's anti-money-laundering rules usually live in scattered scripts across each payment channel,
+so the same transaction can be screened differently depending on where it enters. This app pulls
+that logic into one place:
+
+- **The rules are data, not code.** Each monitoring rule is a row in a versioned rule set
+  (an amount threshold, a high-risk country list, a structuring band, a high-risk customer flag).
+  Tightening a rule is a new version, never a code change.
+- **One shared function scores every transaction.** Both the scoring endpoint and the demo seed
+  call the same `score_transaction` function, so sample data and live traffic are screened by the
+  identical rules.
+- **Every alert is explainable.** An alert snapshots the rule-set version and the exact rules that
+  fired at scoring time, so the evidence stays fixed even after the rules change later.
+- **Access is enforced at the API layer by role.** Analysts and admins author rules, only admins
+  activate a version, and viewers read alerts. The checks live on the endpoints (RBAC), not in the
+  database rows.
+
+An evaluator cares because it shows a real governed workflow: a versioned rule set, a state
+transition (draft to active), a snapshotted audit trail, and role-based access, all in typed Xano
+defs with a working frontend on top.
+
+## Repo layout
+
+```
+aml-transaction-monitoring-engine/
+├── xano/                       the typed Xano backend
+│   ├── tables/                 users, customers, transactions, rule_sets, monitoring_rules, alerts
+│   ├── functions/              score_transaction (the shared scoring logic)
+│   ├── api/                    the API group + 12 endpoints
+│   ├── index.ts                registers everything onto one workspace()
+│   └── xano.lock               pinned object identities (committed)
+├── frontend/                   React + Vite + Tailwind v4 + shadcn/ui
+│   └── src/lib/api.ts          the one contract: paths + types derived from the query defs
+└── docs/                       the landing page served by GitHub Pages
+```
+
+## API surface
+
+All endpoints live under one API group, `api:aml`. Access is checked on the endpoint.
+
+| Method | Path | What it enforces |
+| --- | --- | --- |
+| POST | `/api:aml/auth/login` | Verify email and password, mint a Bearer token |
+| POST | `/api:aml/txn/ingest` | Persist a transaction (signed in); typed inputs reject bad currency, direction, channel |
+| GET | `/api:aml/txn/list` | Transactions plus the customer roster (signed in) |
+| POST | `/api:aml/score/run` | Score a transaction against the active version, write an alert (signed in) |
+| GET | `/api:aml/alerts/list` | The alert trail, newest first (signed in) |
+| GET | `/api:aml/alerts/detail/{alert_id}` | One alert with its snapshotted rules and the transaction (signed in) |
+| GET | `/api:aml/rulesets/list` | Every version and every rule (signed in) |
+| GET | `/api:aml/rulesets/rules` | The rules of one version (signed in) |
+| POST | `/api:aml/rulesets/draft` | Clone the active version into a draft (admin or analyst) |
+| POST | `/api:aml/rulesets/rule-update` | Edit a rule on a draft version only (admin or analyst) |
+| POST | `/api:aml/rulesets/activate` | Activate a draft, retire the prior active (admin only) |
+| POST | `/api:aml/seed/reset` | Truncate and reinstall the demo fixture, then score it (public bootstrap) |
+
+## The demo, end to end
+
+1. **Sign in.** The seed installs three accounts: an admin, an analyst, and a viewer. The role
+   drives what you can do.
+2. **Score a transaction.** Pick one and run scoring, or ingest a new one. The result names the
+   score, the outcome, the version, and each rule that fired.
+3. **Read the evidence.** Open an alert to see the snapshotted rules, the score, the version, and
+   the transaction behind it.
+4. **Tighten a rule in a new version.** Clone the active set into a draft, raise a weight or lower
+   a threshold, then activate it. Re-score the same transaction and watch a new alert appear that
+   references the new version. A transaction that cleared before can alert now, and the old alert
+   stays pinned to the version that produced it.
 
 ## Quick start
 
+You need a free [Xano](https://xano.com) account.
+
 ```bash
+git clone https://github.com/xano-scratch/aml-transaction-monitoring-engine.git
+cd aml-transaction-monitoring-engine
 npm install
-npm run dev          # run the frontend (no backend needed yet)
+npx xanots login          # authenticate with Xano (one time)
+npm run xano:deploy       # builds the frontend, deploys the backend, prints the live URL
 ```
 
-Then author your backend in [`xano/index.ts`](xano/index.ts) — start with the
-walkthrough in [`xano/EXAMPLE.md`](xano/EXAMPLE.md).
+`npm run xano:deploy` deploys to a fresh, auto-expiring environment and hosts the frontend on it.
+Open the printed URL, then click **Reset demo data** on the sign-in screen (or call
+`POST /api:aml/seed/reset`) to load the customers, transactions, active rule set, and the three
+role accounts, and to score every transaction.
 
-## Deploy
+Other scripts:
 
-```bash
-xanots login            # once, to authenticate against your Xano account
-npm run xano:deploy     # build the frontend, then ship it with the backend
-```
+- `npm run typecheck` — type-check the backend and frontend.
+- `npm run xano:export` — compile the backend to `workspace.json` without deploying.
+- `npm run dev` — run the frontend locally against a deployed backend (set `VITE_XANO_HOST`).
 
-- `npm run xano:export` compiles the backend to `workspace.json` (don't commit it).
-- `npm run xano:deploy` deploys the backend and the built frontend to a live
-  **ephemeral** environment and prints its URL. Run it again to refresh the same
-  environment; if it expired, a fresh one is created and the new URL is called out.
-- `xanots status` says who you are signed in as, which workspace you are bound to, and
-  which environment this project last deployed to — its URL, and when it expires. You
-  never have to remember the environment's name.
-- `npm run xano:test` runs the tests the DEPLOYED environment carries — the `tests`
-  on a query/function/middleware and any `workflowTest()`. It compiles nothing, so
-  deploy first. A failing suite exits 5, distinct from a crash. `xanots deploy
-  ./xano/index.ts --test` does both in one step.
+## FAQ
 
-## `xano.lock` — commit it
+**Is the scoring logic in the database?** No. The rules are rows, and one Xano function reads the
+active version's rules and scores a transaction against them. Access control is on the API
+endpoints (role-based), not on the rows.
 
-Object identity derives from `(type, name)`, so a rename would otherwise change
-an object's guid and the engine would **delete and recreate** it rather than
-renaming it in place — losing its rows on a record-preserving import.
-[`xano/xano.lock`](xano/xano.lock) freezes each guid and each API group's
-canonical slug, so renames and re-deploys keep the same identities (and the same
-public URLs).
+**Why snapshot the fired rules onto the alert?** So an alert stays explainable. If you read an
+alert months later, it shows the rules and version that produced it, even if the rules have changed
+since.
 
-Every build writes it — no flag — and it **must be committed**. Ignoring it means
-each build mints identities and public URLs that are thrown away and re-invented
-next time. If you release to a workspace that already exists, adopt what it
-already serves first with `xanots lock import <live-bundle.json> --lock=xano/xano.lock`;
-that is also the recovery path once identities have drifted.
+**Can I add a rule type?** Yes. Add a case to the `score_transaction` function and a matching
+`rule_type` value, then seed a rule that uses it.
 
-```bash
-npm run xano:check      # CI: fail if the export would change xano.lock
-```
+**How do I reset the data?** Call `POST /api:aml/seed/reset`, or use the **Reset demo** button in
+the app. A deploy is a full replace, so redeploying also gives you a clean slate.
 
-To rename an object: rename it in code, run `npm run xano:export` (stderr prints
-the exact fix-up), run `xanots lock rename <kind> <old> <new> --lock=xano/xano.lock`,
-then export again. `lock rename` and `lock import` need that flag here — they take no
-entry file, so they look for the lock in the current directory, while
-`lock prune ./xano/index.ts` derives it from the entry like `export` does.
+## License
 
-## The one contract
-
-[`frontend/src/lib/api.ts`](frontend/src/lib/api.ts) imports the XanoTS query
-defs and derives paths (`getPath()`) and request/response types
-(`InferInput` / `InferResponse`) from them. Never hand-type a URL or a request
-body — change a def and the frontend types follow.
-
-> To spot-check a def from Node (read `getPath()`/`verb`, log a value), run a real
-> file with `tsx <file.ts>` **from inside the project root** — not `tsx -e`, not
-> bare `node file.ts`, and not from another directory (they mis-resolve the
-> intra-workspace `.js` imports and the `@xanots/sdk` specifier). Or use
-> `xanots routes xano/index.ts` to list every endpoint's verb + path.
-
-## The frontend
-
-React + Vite, styled with [Tailwind CSS](https://tailwindcss.com) v4 and
-[shadcn/ui](https://ui.shadcn.com). shadcn is not a dependency — its components
-are copied into [`frontend/src/components/ui/`](frontend/src/components/ui/) and
-owned by this project, so edit them freely. `Button` and `Card` are already
-there; add more with:
-
-```bash
-npx shadcn@latest add dialog input form
-```
-
-[`components.json`](components.json) is pre-configured, so that works with no
-`shadcn init` step. Icons are [Lucide](https://lucide.dev/icons), installed as `lucide-react` and
-imported by name from the package root —
-`import { ArrowRight } from "lucide-react";`.
-[`frontend/src/App.tsx`](frontend/src/App.tsx) already uses one.
-
-Components import through the `@/` alias
-(`@/components/ui/button`, `@/lib/utils`), which maps to `frontend/src/` in both
-`tsconfig.json` and `vite.config.ts` — change one and change the other.
-
-Colors come from the theme tokens in
-[`frontend/src/index.css`](frontend/src/index.css) — see **Theming** below.
-
-## Theming
-
-Scaffolded with the **Neutral** theme. Every color in the app comes from
-the semantic tokens at the top of
-[`frontend/src/index.css`](frontend/src/index.css) — `--primary`,
-`--muted-foreground`, `--border`, the `--chart-*` ramp, the `--sidebar-*` set —
-and every shadcn component reads those names, so editing one value rebrands
-everything that uses it. Style with the token classes (`bg-primary`,
-`text-muted-foreground`) rather than raw palette classes like `bg-gray-100`, or
-the theme stops being one.
-
-Tailwind v4 has no `tailwind.config.js`; that stylesheet *is* the config.
-
-To swap the whole palette later:
-
-```bash
-npx shadcn@latest add https://ui.shadcn.com/r/themes/stone.json   # or any registry theme
-```
-
-Dark mode follows the OS. An inline script in the HTML entry sets
-`class="dark"` on `<html>` before first paint (so the page never flashes light
-first), and the `.dark` block in the stylesheet supplies the palette. To let
-people override it, add a control that toggles that class — or scaffold your
-next project with `--dark toggle`, which ships one.
-
-## Add-ons
-
-XanoTS is composable with other `@xanots/*` packages:
-
-- **[`@xanots/auth`](https://www.npmjs.com/package/@xanots/auth)** — turnkey
-  authentication (user/login/signup tables and endpoints). Install it with
-  `xanots marketplace install @xanots/auth`, then register it in
-  `xano/index.ts`. Authentication only — **not** authorization: it has no
-  roles, permissions, or route guards. Build those with `@xanots/sdk` (a role
-  column plus a `s.precondition` per endpoint).
-- More `@xanots/*` packages register onto the same workspace. This list
-  does not update itself — run `xanots marketplace list` for the live
-  catalogue, `xanots marketplace search <words>` to narrow it, and
-  `xanots marketplace details <package>` to see what an add-on installs and
-  how to register it. All three work before you log in.
-
-None of these ship with the scaffold. Install one only when you need it — an
-add-on you never register is weight in `package.json` for nothing.
+MIT. See [LICENSE](LICENSE).

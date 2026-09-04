@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AML Transaction-Monitoring Rules Engine — Xano template</title>
+    <meta
+      name="description"
+      content="A governed, versioned AML transaction-monitoring API for banks, built with XanoTS. One rule set screens every transaction, and every alert names the exact rule and version that fired."
+    />
+    <style>
+      :root {
+        --bg: #0a0a0a;
+        --card: #161616;
+        --card2: #1e1e1e;
+        --border: rgba(255, 255, 255, 0.1);
+        --text: #ededed;
+        --muted: #a1a1a1;
+        --primary: #ededed;
+        --primary-fg: #0a0a0a;
+        --accent: #e5484d;
+        --radius: 12px;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { color: inherit; }
+      .wrap { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+      header { border-bottom: 1px solid var(--border); }
+      .brand {
+        display: flex; align-items: center; gap: 10px;
+        padding: 18px 0; font-weight: 600; font-size: 15px;
+      }
+      .brand .logo {
+        width: 34px; height: 34px; border-radius: 9px;
+        background: rgba(229, 72, 77, 0.14); color: var(--accent);
+        display: grid; place-items: center;
+      }
+      .brand small { color: var(--muted); font-weight: 400; display: block; font-size: 12px; }
+      .hero { padding: 64px 0 40px; }
+      .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+      .badge {
+        font-size: 12px; padding: 4px 10px; border-radius: 999px;
+        border: 1px solid var(--border); color: var(--muted); background: var(--card);
+      }
+      .badge.accent { color: var(--accent); border-color: rgba(229, 72, 77, 0.3); background: rgba(229, 72, 77, 0.1); }
+      h1 { font-size: clamp(30px, 5vw, 46px); line-height: 1.1; letter-spacing: -0.02em; margin: 0 0 16px; max-width: 18ch; }
+      .lede { font-size: 18px; color: var(--muted); max-width: 60ch; margin: 0 0 20px; }
+      .meta { font-size: 14px; color: var(--muted); margin-bottom: 26px; font-variant-numeric: tabular-nums; }
+      .meta strong { color: var(--text); font-weight: 600; }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+      .btn {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 11px 20px; border-radius: 10px; font-size: 15px; font-weight: 600;
+        text-decoration: none; border: 1px solid transparent; cursor: pointer;
+      }
+      .btn.primary { background: var(--primary); color: var(--primary-fg); }
+      .btn.primary:hover { opacity: 0.9; }
+      .btn.ghost { background: transparent; color: var(--text); border-color: var(--border); }
+      .btn.ghost:hover { background: var(--card); }
+      .shot {
+        margin: 20px 0 8px; border: 1px solid var(--border); border-radius: var(--radius);
+        overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      }
+      .shot img { display: block; width: 100%; height: auto; }
+      section { padding: 40px 0; border-top: 1px solid var(--border); }
+      h2 { font-size: 24px; letter-spacing: -0.01em; margin: 0 0 8px; }
+      .sub { color: var(--muted); margin: 0 0 24px; max-width: 62ch; }
+      .grid { display: grid; gap: 16px; }
+      .grid.two { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+      .grid.three { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+      .card {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: var(--radius); padding: 18px 20px;
+      }
+      .card h3 { margin: 0 0 6px; font-size: 16px; }
+      .card p { margin: 0; color: var(--muted); font-size: 14px; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+      th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; }
+      td code { color: var(--text); }
+      code {
+        font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+        font-size: 13px; background: var(--card2); padding: 2px 6px; border-radius: 6px;
+      }
+      .verb { font-weight: 600; color: var(--accent); }
+      pre {
+        background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+        padding: 18px 20px; overflow-x: auto; margin: 0;
+      }
+      pre code { background: none; padding: 0; color: var(--text); font-size: 13px; line-height: 1.7; }
+      .note {
+        display: flex; gap: 12px; align-items: flex-start;
+        background: rgba(229, 72, 77, 0.07); border: 1px solid rgba(229, 72, 77, 0.25);
+        border-radius: var(--radius); padding: 14px 16px; color: var(--muted); font-size: 14px;
+      }
+      ul.checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+      ul.checks li { padding-left: 26px; position: relative; color: var(--muted); }
+      ul.checks li strong { color: var(--text); font-weight: 600; }
+      ul.checks li::before {
+        content: ""; position: absolute; left: 0; top: 9px;
+        width: 10px; height: 10px; border-radius: 3px; background: var(--accent);
+      }
+      footer { border-top: 1px solid var(--border); padding: 28px 0 48px; color: var(--muted); font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="wrap">
+        <div class="brand">
+          <span class="logo" aria-hidden="true">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+          </span>
+          <span>AML Monitoring Engine<small>A XanoTS template · xano-scratch</small></span>
+        </div>
+      </div>
+    </header>
+
+    <main class="wrap">
+      <section class="hero" style="border-top: none">
+        <div class="badges">
+          <span class="badge accent">Business Logic Centralization</span>
+          <span class="badge">Banking &amp; financial services</span>
+          <span class="badge">Built with XanoTS</span>
+        </div>
+        <h1>One rule set screens every transaction the same way.</h1>
+        <p class="lede">
+          A governed, versioned AML transaction-monitoring API for banks. Post a transaction and
+          get back its risk score, the exact versioned rules that fired, and a queryable alert
+          trail, so every payment rail and case tool screens against one auditable rule set.
+        </p>
+        <p class="meta">
+          <strong>6</strong> tables · <strong>12</strong> APIs · <strong>1</strong> shared
+          function · MIT licensed
+        </p>
+        <div class="hero-actions">
+          <a class="btn primary" href="https://github.com/xano-scratch/aml-transaction-monitoring-engine">View on GitHub</a>
+          <a class="btn ghost" href="#use">Use this template</a>
+        </div>
+        <div class="shot">
+          <img
+            src="screenshot.png"
+            alt="The alert evidence screen: a transaction scored 105 with the three rules that fired, the total score, and the rule-set version."
+          />
+        </div>
+      </section>
+
+      <section>
+        <h2>What it demonstrates</h2>
+        <p class="sub">
+          A bank's monitoring rules usually live in scattered scripts across each channel, so the
+          same transaction can be screened differently depending on where it enters. This template
+          pulls that logic into one governed place.
+        </p>
+        <ul class="checks">
+          <li>
+            <strong>The rules are data, not code.</strong> Each rule is a row in a versioned rule
+            set (amount threshold, high-risk country list, structuring band, high-risk customer).
+            Tightening a rule is a new version, never a code change.
+          </li>
+          <li>
+            <strong>One shared function scores everything.</strong> The scoring endpoint and the
+            demo seed call the same <code>score_transaction</code> function, so sample data and live
+            traffic are screened by the identical rules.
+          </li>
+          <li>
+            <strong>Every alert is explainable.</strong> An alert snapshots the version and the
+            exact rules that fired, so the evidence stays fixed even after the rules change later.
+          </li>
+          <li>
+            <strong>Access is enforced at the API layer by role.</strong> Analysts and admins author
+            rules, only admins activate a version, viewers read. The checks live on the endpoints,
+            not on the rows.
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Three screens</h2>
+        <p class="sub">A React and Vite frontend that derives every path and type from the query defs.</p>
+        <div class="grid three">
+          <div class="card">
+            <h3>Transactions</h3>
+            <p>List and ingest transactions, then run scoring and see the alert inline: score, outcome, version, and each rule that fired.</p>
+          </div>
+          <div class="card">
+            <h3>Alerts</h3>
+            <p>The alert trail with an evidence panel showing the snapshotted rules, the score, the version, and the transaction behind it.</p>
+          </div>
+          <div class="card">
+            <h3>Rule sets</h3>
+            <p>Every version and its rules. Clone the active set into a draft, tighten a rule, then activate it. The governed, versioned surface.</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>API surface</h2>
+        <p class="sub">All endpoints live under one API group, <code>api:aml</code>. Access is checked on the endpoint.</p>
+        <table>
+          <thead>
+            <tr><th>Method</th><th>Path</th><th>Enforces</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="verb">POST</span></td><td><code>/api:aml/auth/login</code></td><td>Verify credentials, mint a Bearer token</td></tr>
+            <tr><td><span class="verb">POST</span></td><td><code>/api:aml/txn/ingest</code></td><td>Persist a transaction (signed in)</td></tr>
+            <tr><td><span class="verb">POST</span></td><td><code>/api:aml/score/run</code></td><td>Score against the active version, write an alert (signed in)</td></tr>
+            <tr><td><span class="verb">GET</span></td><td><code>/api:aml/alerts/detail/{alert_id}</code></td><td>One alert with its snapshotted rules and transaction (signed in)</td></tr>
+            <tr><td><span class="verb">POST</span></td><td><code>/api:aml/rulesets/draft</code></td><td>Clone the active version into a draft (admin or analyst)</td></tr>
+            <tr><td><span class="verb">POST</span></td><td><code>/api:aml/rulesets/rule-update</code></td><td>Edit a rule on a draft version only (admin or analyst)</td></tr>
+            <tr><td><span class="verb">POST</span></td><td><code>/api:aml/rulesets/activate</code></td><td>Activate a draft, retire the prior active (admin only)</td></tr>
+            <tr><td><span class="verb">POST</span></td><td><code>/api:aml/seed/reset</code></td><td>Reinstall the demo fixture and score it (public bootstrap)</td></tr>
+          </tbody>
+        </table>
+        <p class="sub" style="margin-top: 16px; margin-bottom: 0">
+          Plus <code>txn/list</code>, <code>alerts/list</code>, <code>rulesets/list</code>, and
+          <code>rulesets/rules</code> reads. Twelve endpoints in all.
+        </p>
+      </section>
+
+      <section id="use">
+        <h2>Use this template</h2>
+        <p class="sub">
+          Point your coding agent at the repo, or clone it yourself. You need a free Xano account.
+        </p>
+        <pre><code>Use the Xano template at
+https://github.com/xano-scratch/aml-transaction-monitoring-engine
+Clone it, run npm install, then npm run xano:deploy to stand up the
+AML transaction-monitoring rules engine in my Xano workspace.</code></pre>
+        <p class="sub" style="margin: 20px 0 10px">Or from a terminal:</p>
+        <pre><code>git clone https://github.com/xano-scratch/aml-transaction-monitoring-engine.git
+cd aml-transaction-monitoring-engine
+npm install
+npx xanots login          # authenticate with Xano (one time)
+npm run xano:deploy       # builds the frontend, deploys the backend, prints the live URL</code></pre>
+        <p class="sub" style="margin: 20px 0 0">
+          Open the printed URL, then click <strong>Reset demo data</strong> on the sign-in screen to
+          load the customers, transactions, active rule set, and the three role accounts.
+        </p>
+      </section>
+
+      <section>
+        <div class="note">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink: 0; margin-top: 2px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+          <span>
+            Any live preview linked from the build is an ephemeral environment that expires. The
+            durable artifact is this repo: deploy it with <code>npm run xano:deploy</code> for your
+            own live URL any time.
+          </span>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        AML Transaction-Monitoring Rules Engine · A XanoTS template in the xano-scratch org · MIT
+        License
+      </div>
+    </footer>
+  </body>
+</html>
