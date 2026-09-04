@@ -2,7 +2,14 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { DatabaseZap, LogOut, ShieldCheck } from "lucide-react";
 
-import { resetDemoData, setToken, type LoginResult } from "@/lib/api";
+import {
+  getToken,
+  loadStoredUser,
+  resetDemoData,
+  setToken,
+  storeUser,
+  type LoginResult,
+} from "@/lib/api";
 import { SignIn } from "@/components/SignIn";
 import { TransactionsScreen } from "@/components/TransactionsScreen";
 import { AlertsScreen } from "@/components/AlertsScreen";
@@ -25,23 +32,28 @@ function initialTab(): string {
 }
 
 export default function App() {
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session | null>(
+    () => (getToken() ? loadStoredUser() : null),
+  );
   const [tab, setTab] = useState<string>(initialTab());
   const [resetting, setResetting] = useState(false);
 
   function onSignedIn(result: LoginResult) {
     const user = result.user as { id: unknown; email: unknown; name: unknown; role: unknown };
-    setToken(String((result as { token: unknown }).token));
-    setSession({
+    const session: Session = {
       id: Number(user.id),
       email: String(user.email),
       name: String(user.name),
       role: String(user.role),
-    });
+    };
+    setToken(String((result as { token: unknown }).token));
+    storeUser(session);
+    setSession(session);
   }
 
   function signOut() {
     setToken(null);
+    storeUser(null);
     setSession(null);
   }
 

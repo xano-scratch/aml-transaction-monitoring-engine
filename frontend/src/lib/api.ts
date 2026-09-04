@@ -36,6 +36,33 @@ export function getToken(): string | null {
   return authToken;
 }
 
+// The signed-in user, persisted so a page reload keeps the session (the token
+// alone can't rebuild it). Also lets a bookmarked deep link resolve while signed in.
+const USER_KEY = "aml_user";
+export type StoredUser = { id: number; email: string; name: string; role: string };
+
+export function storeUser(user: StoredUser | null): void {
+  if (typeof localStorage === "undefined") return;
+  if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+  else localStorage.removeItem(USER_KEY);
+}
+export function loadStoredUser(): StoredUser | null {
+  if (typeof localStorage === "undefined") return null;
+  const raw = localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+  try {
+    const u = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      id: Number(u.id),
+      email: String(u.email),
+      name: String(u.name),
+      role: String(u.role),
+    };
+  } catch {
+    return null;
+  }
+}
+
 type CallOpts = { method: string; body?: unknown; auth?: boolean };
 
 async function call<T>(path: string, opts: CallOpts): Promise<T> {
