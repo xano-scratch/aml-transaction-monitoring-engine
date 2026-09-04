@@ -1,0 +1,67 @@
+{
+  "version": 1,
+  "objects": {
+    "app:aml": {
+      "guid": "b513027389841ca9c761d61361c98df7",
+      "canonical": "aml",
+      "canonical_source": "code"
+    },
+    "dbo:alerts": {
+      "guid": "09073685937f98da534b981601959919"
+    },
+    "dbo:customers": {
+      "guid": "e7b073506cc02642649907152fe5bedf"
+    },
+    "dbo:monitoring_rules": {
+      "guid": "9f90fc1bffaa8b763790d43be3f957ea"
+    },
+    "dbo:rule_sets": {
+      "guid": "b0d054baf5ed8d02c15e627071ad1c0b"
+    },
+    "dbo:transactions": {
+      "guid": "2a5b3c18b00ba6132fb855f1a2686ac8"
+    },
+    "dbo:users": {
+      "guid": "157d4a98d979cf04b9ccdb98dfc15229"
+    },
+    "function:score_transaction": {
+      "guid": "f06b8e5e2ad62427825c63893a05a085"
+    },
+    "query:aml|GET|alerts/detail/{alert_id}": {
+      "guid": "bf9998218f53a2d05f4052d6e68ae8a0"
+    },
+    "query:aml|GET|alerts/list": {
+      "guid": "8b38ae62baa83433e046af38f2e067ed"
+    },
+    "query:aml|GET|rulesets/list": {
+      "guid": "77ccd7e857611f619e2d74f1b15a206d"
+    },
+    "query:aml|GET|rulesets/rules": {
+      "guid": "8137a8a400c75713f0eecdf2ae61242a"
+    },
+    "query:aml|GET|txn/list": {
+      "guid": "a88c3241214246fffe5394493a5a03b0"
+    },
+    "query:aml|POST|auth/login": {
+      "guid": "afef326bd408db6f665850fa04845101"
+    },
+    "query:aml|POST|rulesets/activate": {
+      "guid": "74c9dbb4f864d9c1b0670fddf40390db"
+    },
+    "query:aml|POST|rulesets/draft": {
+      "guid": "8ddf843b0e94c5ea2992eee7db8b1bd8"
+    },
+    "query:aml|POST|rulesets/rule-update": {
+      "guid": "a2da19109fd3119effa1070c3511d93d"
+    },
+    "query:aml|POST|score/run": {
+      "guid": "d31c4955fb3741e860a52672b9e32390"
+    },
+    "query:aml|POST|seed/reset": {
+      "guid": "1fb74927157358fecb38ace9954854f3"
+    },
+    "query:aml|POST|txn/ingest": {
+      "guid": "5fe0e8812d0773b22babe9a49bc961ac"
+    }
+  }
+}
